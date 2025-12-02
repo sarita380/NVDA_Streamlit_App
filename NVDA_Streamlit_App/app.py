@@ -291,13 +291,46 @@ with st.spinner("Training models on NVDA data..."):
 
 st.success("Training complete.")
 
+
+#here
 # -------------------------------------------------------------------
-# Metrics Table
+# Metrics Table + Accuracy Chart
 # -------------------------------------------------------------------
 st.subheader(" Model Performance (Test Set)")
+
+# 1) Add Accuracy_% column (100 - MAPE)
+metrics_df["Accuracy_%"] = 100.0 - metrics_df["MAPE_%"]
+
+# 2) Show table (include Accuracy_% in formatting)
 st.dataframe(
-    metrics_df.style.format({"RMSE": "{:.3f}", "MAE": "{:.3f}", "MAPE_%": "{:.2f}"})
+    metrics_df.style.format(
+        {
+            "RMSE": "{:.3f}",
+            "MAE": "{:.3f}",
+            "MAPE_%": "{:.2f}",
+            "Accuracy_%": "{:.2f}",
+        }
+    )
 )
+
+# 3) Accuracy bar chart
+st.subheader(" Accuracy by Model (100% - MAPE)")
+
+fig_acc, ax_acc = plt.subplots(figsize=(8, 4))
+
+models = metrics_df["Model"].tolist()
+accuracies = metrics_df["Accuracy_%"].tolist()
+
+ax_acc.bar(models, accuracies)
+ax_acc.set_ylim(0, 100)
+ax_acc.set_ylabel("Accuracy (%)")
+ax_acc.set_title("Model Accuracy (higher is better)")
+plt.xticks(rotation=30, ha="right")
+plt.tight_layout()
+
+st.pyplot(fig_acc)
+
+#to here
 
 # -------------------------------------------------------------------
 # Prediction Explorer
@@ -347,6 +380,7 @@ for model_name_key, preds in predictions_dict.items():
             "Abs % Error": round(pct_err_value, 2),
         }
     )
+
 
 comparison_df = pd.DataFrame(rows).sort_values("Abs % Error").reset_index(drop=True)
 st.dataframe(comparison_df)
